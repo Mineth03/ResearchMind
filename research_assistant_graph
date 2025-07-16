@@ -1,0 +1,20 @@
+// Multi-Agent Research Assistant Workflow
+digraph {
+	Q [label="User Query"]
+	A [label="Search Arxiv"]
+	O [label="Search OpenAlex"]
+	M [label="Merge Results"]
+	S [label="Summarizer Agent"]
+	C [label="Critic Agent"]
+	V [label="Verifier Agent"]
+	F [label="Final Composer"]
+	Q -> A
+	Q -> O
+	A -> M
+	O -> M
+	M -> S
+	S -> C
+	C -> V [label=approved]
+	C -> S [label=needs_rewrite]
+	V -> F
+}
