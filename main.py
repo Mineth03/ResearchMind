@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import TypedDict, List, Any
 from langgraph.graph import StateGraph
@@ -9,10 +10,20 @@ from dotenv import load_dotenv
 import os
 
 app = FastAPI()
-client = OpenAI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 load_dotenv()
-os.environ["OPENAI_API_KEY"] = os.getenv("API_KEY")
+api_key = os.getenv("API_KEY")
+
+if not api_key:
+    raise ValueError("❗ API_KEY not found. Please check your .env file.")
+
+client = OpenAI(api_key=api_key)
 
 class ResearchState(TypedDict):
     user_query: str
@@ -77,8 +88,9 @@ def verify_summary(summary_text):
     response = client.chat.completions.create(model="gpt-3.5-turbo", messages=[{"role": "user", "content": prompt}])
     return response.choices[0].message.content
 
-def compose_final_answer(summary, critique, verification):
-    return f"Summary:\n{summary}\n\nCritique:\n{critique}\n\nVerification Notes:\n{verification}"
+def compose_final_answer(summary, papers):
+    paper_list = "\n".join([f"- {p['title']}" for p in papers])
+    return f"{summary}\n\nSummarized Research Papers:\n{paper_list}"
 
 # Graph Nodes
 def search_arxiv_node(state: ResearchState) -> ResearchState:
@@ -113,7 +125,7 @@ def verifier_node(state: ResearchState) -> ResearchState:
     return state
 
 def final_composer_node(state: ResearchState) -> ResearchState:
-    state['final_output'] = compose_final_answer(state['summary'], state['critique'], state['verification'])
+    state['final_output'] = compose_final_answer(state['summary'], state['merged_results'])
     return state
 
 def check_critique_status(state: ResearchState) -> str:
