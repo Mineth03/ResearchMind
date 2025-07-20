@@ -12,13 +12,19 @@ import os
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
+    allow_origins=["*"],
     allow_origins=["*"],  
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 load_dotenv()
-client = OpenAI(api_key=os.getenv("API_KEY"))
+api_key = os.getenv("API_KEY")
+
+if not api_key:
+    raise ValueError("❗ API_KEY not found. Please check your .env file.")
+
+client = OpenAI(api_key=api_key)
 
 class ResearchState(TypedDict):
     user_query: str
