@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import TypedDict, List, Any
 from langgraph.graph import StateGraph
@@ -9,10 +10,15 @@ from dotenv import load_dotenv
 import os
 
 app = FastAPI()
-client = OpenAI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 load_dotenv()
-os.environ["OPENAI_API_KEY"] = os.getenv("API_KEY")
+client = OpenAI(api_key=os.getenv("API_KEY"))
 
 class ResearchState(TypedDict):
     user_query: str
