@@ -18,7 +18,9 @@ function App() {
       const data = await response.json();
       setSummary(data.summary);
     } catch (error) {
+
       setSummary('❗ Error fetching summary. Please check your server.');
+
       console.error(error);
     }
     setLoading(false);
